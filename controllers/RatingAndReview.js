@@ -2,15 +2,11 @@ const RatingAndReview = require("../models/RatingAndRaview");
 const Course = require("../models/Course");
 const { mongo, default: mongoose } = require("mongoose");
 
-//createRating
 exports.createRating = async (req, res) => {
     try{
 
-        //get user id
         const userId = req.user.id;
-        //fetchdata from req body
         const {rating, review, courseId} = req.body;
-        //check if user is enrolled or not
         const courseDetails = await Course.findOne(
                                     {_id:courseId,
                                     studentsEnrolled: {$elemMatch: {$eq: userId} },
@@ -22,7 +18,6 @@ exports.createRating = async (req, res) => {
                 message:'Student is not enrolled in the course',
             });
         }
-        //check if user already reviewed the course
         const alreadyReviewed = await RatingAndReview.findOne({
                                                 user:userId,
                                                 course:courseId,
@@ -33,14 +28,12 @@ exports.createRating = async (req, res) => {
                         message:'Course is already reviewed by the user',
                     });
                 }
-        //create rating and review
         const ratingReview = await RatingAndReview.create({
                                         rating, review, 
                                         course:courseId,
                                         user:userId,
                                     });
        
-        //update course with this rating/review
         const updatedCourseDetails = await Course.findByIdAndUpdate({_id:courseId},
                                     {
                                         $push: {
@@ -70,9 +63,7 @@ exports.createRating = async (req, res) => {
 //getAverageRating
 exports.getAverageRating = async (req, res) => {
     try {
-            //get course ID
             const courseId = req.body.courseId;
-            //calculate avg rating
 
             const result = await RatingAndReview.aggregate([
                 {
@@ -88,7 +79,6 @@ exports.getAverageRating = async (req, res) => {
                 }
             ])
 
-            //return rating
             if(result.length > 0) {
 
                 return res.status(200).json({
@@ -98,7 +88,6 @@ exports.getAverageRating = async (req, res) => {
 
             }
             
-            //if no rating/Review exist
             return res.status(200).json({
                 success:true,
                 message:'Average Rating is 0, no ratings given till now',
@@ -115,7 +104,6 @@ exports.getAverageRating = async (req, res) => {
 }
 
 
-//getAllRatingAndReviews
 
 exports.getAllRating = async (req, res) => {
     try{
